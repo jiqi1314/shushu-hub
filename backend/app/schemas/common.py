@@ -44,6 +44,11 @@ class DivinationRequest(BaseModel):
     question: str | None = Field(default=None, description="Free-text query context")
     gender: Gender | None = Field(default=None)
 
+    details: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Per-system knobs (e.g. qimen variant='chabu'|'zhirun')",
+    )
+
     latitude: float | None = Field(
         default=None,
         ge=-90,

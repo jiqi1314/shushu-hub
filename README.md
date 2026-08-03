@@ -35,10 +35,11 @@ The Chinese metaphysical tradition includes dozens of mature divination systems 
 🚧 **Phase 2 (三式其餘 + 並排比較)** — `main` branch
 - ✅ FastAPI app + health endpoint
 - ✅ ichingshifa (周易) module adapter
-- ✅ liuren (大六壬) module adapter (Phase 2)
+- ✅ liuren (大六壬) module adapter
+- ✅ qimen (奇門遁甲) module adapter (Phase 2)
 - ✅ Unified request/response schema
 - ✅ i18n-friendly error handling
-- 🔜 Qi Men, Tai Yi modules
+- 🔜 Tai Yi module
 - 🔜 Astro module (88 systems via kinastro)
 - 🔜 Next.js frontend
 

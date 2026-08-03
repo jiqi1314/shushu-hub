@@ -25,8 +25,9 @@
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `system` | `string` | ✅ | `"ichingshifa"` / `"liuren"` (Phase 2) |
+| `system` | `string` | ✅ | `"ichingshifa"` / `"liuren"` / `"qimen"` (Phase 2) |
 | `method` | `string` | ✅ | `"random"` / `"datetime"` / `"manual"` (system-dependent) |
+| `details.variant` | `string` | optional | For `qimen`: `"chabu"` (default), `"zhirun"`, `"ke_chabu"`, `"ke_zhirun"`, `"jinhanyujing"` |
 | `datetime` | `string` (ISO 8601) | conditional | `method=datetime` 或 `method=manual` 時填寫 |
 | `timezone` | `string` | conditional | IANA 時區名稱，如 `"Asia/Hong_Kong"` |
 | `manual_lines` | `string` (6 chars) | conditional | `method=manual` 時輸入 6 個數字（6/7/8/9）|
@@ -136,5 +137,28 @@
   "method": "datetime",
   "datetime": "2026-05-15T14:30:00",
   "timezone": "Asia/Hong_Kong"
+}
+```
+
+### qimen（奇門遁甲）
+
+| 項目 | 說明 |
+|------|------|
+| **System ID** | `qimen` |
+| **System Name** | 奇門遁甲 |
+| **支援 method** | 僅 `datetime` |
+| **必填欄位** | `datetime`（後端自動推算） |
+| **選填變體** | `details.variant`: `chabu` (時家拆補, 預設), `zhirun` (時家置閏), `ke_chabu` (刻家拆補), `ke_zhirun` (刻家置閏), `jinhanyujing` (金函玉鏡日家) |
+| **回傳 details** | `排盤方式`, `排局`, `節氣`, `值符值使`, `天盤`, `地盤`, `門`, `星`, `神`, `馬星`, `長生運` |
+| **底層函式庫** | [kentang2017/kinqimen](https://github.com/kentang2017/kinqimen) |
+| **特殊處理** | Upstream 套件 `__init__.py` 為空，使用 `importlib.util` 直載 `kinqimen.py` |
+
+**範例請求（金函玉鏡日家奇門）**
+```json
+{
+  "system": "qimen",
+  "method": "datetime",
+  "datetime": "2026-08-04T14:30:00",
+  "details": { "variant": "jinhanyujing" }
 }
 ```
