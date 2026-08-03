@@ -48,12 +48,19 @@ def create_app() -> FastAPI:
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
         first_error = exc.errors()[0] if exc.errors() else {}
+        safe_errors = []
+        for err in exc.errors():
+            ctx = err.get("ctx")
+            if isinstance(ctx, dict):
+                err = {k: v for k, v in err.items() if k != "ctx"}
+                err["ctx_type"] = type(ctx).__name__ if ctx else None
+            safe_errors.append(err)
         return JSONResponse(
             status_code=422,
             content=ErrorResponse(
                 error_code=ErrorCode.INVALID_DATETIME,
                 message=first_error.get("msg", fallback_message(ErrorCode.INVALID_DATETIME)),
-                details={"errors": exc.errors()},
+                details={"errors": safe_errors},
             ).model_dump(mode="json"),
         )
 

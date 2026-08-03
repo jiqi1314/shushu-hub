@@ -31,10 +31,12 @@ QiMenVariant = Literal["chabu", "zhirun", "ke_chabu", "ke_zhirun", "jinhanyujing
 def _load_kinqimen_module() -> Any:
     """Lazily load the kinqimen package bypassing its broken ``__init__.py``.
 
-    The upstream PyPI release ships an empty ``__init__.py`` and uses an
-    unqualified ``import config`` in ``kinqimen.py``, so we cannot use the
-    package import mechanism. Instead we locate the package directory on
-    disk and load ``kinqimen.py`` directly via ``importlib.util``.
+    The upstream ``kinqimen.py`` does ``import config`` (unqualified). When
+    multiple broken packages (``kinqimen`` and ``kintaiyi``) live next to
+    each other on ``sys.path``, both have a ``config.py`` and the wrong
+    one gets picked up depending on path ordering. We work around this by
+    pre-loading kinqimen's own ``config.py`` into ``sys.modules['config']``
+    before executing the upstream module.
     """
     candidate: Path | None = None
     for p in sys.path:
@@ -51,6 +53,16 @@ def _load_kinqimen_module() -> Any:
 
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
+
+    config_path = candidate / "config.py"
+    config_spec = importlib.util.spec_from_file_location(
+        "_kinqimen_config", config_path
+    )
+    if config_spec is None or config_spec.loader is None:
+        raise RuntimeError("Could not load kinqimen config.py")
+    config_module = importlib.util.module_from_spec(config_spec)
+    config_spec.loader.exec_module(config_module)
+    sys.modules["config"] = config_module
 
     spec = importlib.util.spec_from_file_location(
         "_kinqimen_impl", candidate / "kinqimen.py"

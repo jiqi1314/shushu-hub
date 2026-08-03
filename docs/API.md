@@ -102,9 +102,74 @@
 
 ## 後續端點（規劃中）
 
-- `POST /api/compare` — 多系統並排比較
 - `POST /api/interpret` — AI 綜合解讀
-- `GET /api/systems` — 列出可用術數與輸入需求
+- `GET /api/systems` — 列出可用術數與輸入需求（已實作）
+
+---
+
+### `POST /api/compare`
+
+**多系統並排比較**。單一請求跑多個術數，回傳結果陣列 + 跨系統分析。
+
+**Request Body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `systems` | `string[]` | optional | 要跑的系統 ID 清單；省略時跑全部已註冊模組 |
+| `method` | `string` | ✅ | `random` / `datetime` / `manual` |
+| `datetime` | `string` (ISO 8601) | conditional | method=datetime 時必填 |
+| `timezone` | `string` | optional | IANA 時區 |
+| `manual_lines` | `string` | conditional | method=manual（限 ichingshifa）|
+| `question` | `string` | optional | 問事描述 |
+| `latitude` / `longitude` | `float` | optional | 經緯度（占星必填）|
+| `use_true_solar_time` | `bool` | optional | 預設 `false` |
+| `per_system` | `object` | optional | 每系統的專屬 knob，如 `{"qimen":{"variant":"zhirun"}, "taiyi":{"scope":"nianji"}}` |
+
+**範例請求**
+```json
+{
+  "datetime": "2026-08-04T14:30:00",
+  "question": "事業轉職時機",
+  "per_system": {
+    "qimen": { "variant": "zhirun" },
+    "taiyi": { "scope": "nianji", "formula": "jinjing" }
+  }
+}
+```
+
+**Response 200**
+```json
+{
+  "results": [ /* DivinationResult[], 每個系統一份 */ ],
+  "cross_analysis": {
+    "consensus": "neutral",
+    "verdict_counts": { "inauspicious": 2, "neutral": 2 },
+    "timings": ["unknown", "ongoing", "early", "early"],
+    "entities_by_system": {
+      "周易筮法": ["本卦：離", "之卦：旅"],
+      "大六壬":   ["初傳：巳", "中傳：申", "末傳：寅", "格局：伏吟", "格局：自任"],
+      "奇門遁甲": ["天乙：芮", "星宮：心(坤)", "門宮：開(乾)"],
+      "太乙神數": ["太乙：坤", "紀元：第四紀庚子元", ...]
+    },
+    "overlap": [
+      "系統間存在分歧",
+      "時機：不同系統給出不同時間窗"
+    ],
+    "differences": [
+      "周易筮法：inauspicious",
+      "大六壬：inauspicious",
+      "奇門遁甲：neutral",
+      "太乙神數：neutral"
+    ]
+  },
+  "failures": [],
+  "question": "事業轉職時機",
+  "computed_at": "2026-08-04T..."
+}
+```
+
+**錯誤回應**（單一系統失敗不會中斷整體請求）
+- 422：method 與 systems 不相容（例如 method=random + systems=[liuren]）
 
 ---
 

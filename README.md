@@ -32,15 +32,16 @@ The Chinese metaphysical tradition includes dozens of mature divination systems 
 
 ### Status
 
-🚧 **Phase 2 (三式其餘 + 並排比較)** — `main` branch
+🚧 **Phase 2 (三式 + 並排比較)** — `main` branch
 - ✅ FastAPI app + health endpoint
 - ✅ ichingshifa (周易) module adapter
 - ✅ liuren (大六壬) module adapter
 - ✅ qimen (奇門遁甲) module adapter
-- ✅ taiyi (太乙神數) module adapter (Phase 2 ✓)
+- ✅ taiyi (太乙神數) module adapter
+- ✅ `POST /api/compare` 多系統並排比較端點 (Phase 2 ✓)
+- ✅ `field_mapper.py` 跨系統語意標準化
 - ✅ Unified request/response schema
 - ✅ i18n-friendly error handling
-- 🔜 `POST /api/compare` 多系統並排比較端點
 - 🔜 Astro module (88 systems via kinastro)
 - 🔜 Next.js frontend
 

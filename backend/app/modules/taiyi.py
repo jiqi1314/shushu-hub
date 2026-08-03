@@ -93,11 +93,10 @@ def _sanitize_for_json(obj: Any) -> Any:
 def _load_kintaiyi_module() -> Any:
     """Lazily load the kintaiyi package bypassing its broken ``__init__.py``.
 
-    The upstream code does ``from config import ...``. If ``kinqimen.config``
-    was previously loaded, ``sys.modules['config']`` will be that module and
-    ``from config import`` will fail to find kintaiyi's symbols. We clear
-    the cached ``config`` entry before loading kintaiyi so the unqualified
-    ``import config`` resolves to kintaiyi's own ``config.py``.
+    The upstream ``kintaiyi.py`` does ``from config import ...`` (and many
+    other broken-package siblings do similar). To make sure the right
+    ``config.py`` resolves, we pre-load kintaiyi's own ``config.py`` into
+    ``sys.modules['config']`` before executing the upstream module.
     """
     candidate: Path | None = None
     for p in sys.path:
@@ -112,10 +111,18 @@ def _load_kintaiyi_module() -> Any:
             "'pip install --no-deps kintaiyi'"
         )
 
-    sys.modules.pop("config", None)
-
     if str(candidate) not in sys.path:
         sys.path.insert(0, str(candidate))
+
+    config_path = candidate / "config.py"
+    config_spec = importlib.util.spec_from_file_location(
+        "_kintaiyi_config", config_path
+    )
+    if config_spec is None or config_spec.loader is None:
+        raise RuntimeError("Could not load kintaiyi config.py")
+    config_module = importlib.util.module_from_spec(config_spec)
+    config_spec.loader.exec_module(config_module)
+    sys.modules["config"] = config_module
 
     spec = importlib.util.spec_from_file_location(
         "_kintaiyi_impl", candidate / "kintaiyi.py"

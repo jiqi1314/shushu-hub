@@ -92,6 +92,23 @@ class IchingShifaModule(BaseModule):
                 main_judgment = "".join(str(x) for x in dayan[2:]) if len(dayan) >= 3 else str(dayan)
             else:
                 main_judgment = str(ben_gua.get("卦", "")) if isinstance(ben_gua, dict) else ""
+        elif isinstance(raw, tuple) and len(raw) >= 4:
+            # datetime_bookgua returns a tuple like
+            # ('離之旅', '火火離', '變爻為初九', '履錯然，敬之無咎。')
+            raw_output = str(raw)
+            ben_zhi = raw[0] or ""
+            details["ben_gua_name"] = ben_zhi
+            if isinstance(ben_zhi, str) and "之" in ben_zhi:
+                parts = ben_zhi.split("之")
+                details["ben_gua_name"] = parts[0]
+                details["zhi_gua_name"] = parts[1] if len(parts) > 1 else ""
+            details["gua_symbol"] = raw[1]
+            yao_info = raw[2] or ""
+            details["changed_line_text"] = yao_info
+            main_judgment = " → ".join(str(x) for x in raw if x)
+        elif isinstance(raw, str):
+            raw_output = raw
+            main_judgment = raw.split("\n", 1)[0][:80]
         else:
             raw_output = str(raw)
             main_judgment = raw_output.split("\n", 1)[0][:80]
