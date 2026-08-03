@@ -1,4 +1,4 @@
-"""Lunar calendar conversion utilities (農曆換算)."""
+"""Lunar calendar conversion utilities (農曆換算) using sxtwl."""
 
 from datetime import datetime
 from typing import Any
@@ -13,8 +13,7 @@ except ImportError:  # pragma: no cover
 def to_lunar(dt: datetime) -> dict[str, Any]:
     """Convert a solar datetime to its lunisolar representation.
 
-    Returns a dict with the traditional Chinese lunar fields plus the
-    干支 of the day, which is the canonical input for systems like 大六壬.
+    Returns a dict with the lunar year/month/day plus an ``is_leap_month`` flag.
     """
     if not _SXTWL_AVAILABLE:  # pragma: no cover
         raise RuntimeError("sxtwl is required for lunar conversion")
@@ -22,29 +21,22 @@ def to_lunar(dt: datetime) -> dict[str, Any]:
     day_obj = sxtwl.fromSolar(dt.year, dt.month, dt.day)
 
     return {
-        "lunar_year": day_obj.getYearGZ(),
-        "lunar_month": day_obj.getMonthGZ(),
-        "lunar_day": day_obj.getDayGZ(),
-        "is_leap_month": bool(getattr(day_obj, "isLunarLeap", False)),
+        "lunar_year": day_obj.getLunarYear(),
+        "lunar_month": day_obj.getLunarMonth(),
+        "lunar_day": day_obj.getLunarDay(),
+        "is_leap_month": bool(day_obj.isLunarLeap()),
     }
 
 
-def solar_term_name(dt: datetime) -> str | None:
-    """Return the nearest solar term name for a given moment, if available."""
-    if not _SXTWL_AVAILABLE:  # pragma: no cover
-        return None
+def lunar_month_chinese(dt: datetime) -> str:
+    """Return the lunar month in Chinese numerals (一..十二).
 
-    terms = ["小寒", "大寒", "立春", "雨水", "驚蟄", "春分",
-             "清明", "穀雨", "立夏", "小滿", "芒種", "夏至",
-             "小暑", "大暑", "立秋", "處暑", "白露", "秋分",
-             "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"]
-
-    try:
-        if dt.month == 1 and dt.day <= 5:
-            return "小寒" if dt.day < 3 else None
-        idx = (dt.month - 1) * 2
-        if idx < len(terms):
-            return terms[idx]
-    except Exception:
-        return None
-    return None
+    Used as the ``cmonth`` input for kinliuren's ``Liuren`` constructor.
+    """
+    info = to_lunar(dt)
+    chinese = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"]
+    m = info["lunar_month"]
+    if 1 <= m <= 12:
+        prefix = "閏" if info["is_leap_month"] else ""
+        return prefix + chinese[m]
+    return chinese[m] if 0 <= m < len(chinese) else "一"

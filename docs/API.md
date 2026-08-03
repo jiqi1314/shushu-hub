@@ -25,8 +25,8 @@
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `system` | `string` | ✅ | `"ichingshifa"` (Phase 1) |
-| `method` | `string` | ✅ | `"random"` / `"datetime"` / `"manual"` |
+| `system` | `string` | ✅ | `"ichingshifa"` / `"liuren"` (Phase 2) |
+| `method` | `string` | ✅ | `"random"` / `"datetime"` / `"manual"` (system-dependent) |
 | `datetime` | `string` (ISO 8601) | conditional | `method=datetime` 或 `method=manual` 時填寫 |
 | `timezone` | `string` | conditional | IANA 時區名稱，如 `"Asia/Hong_Kong"` |
 | `manual_lines` | `string` (6 chars) | conditional | `method=manual` 時輸入 6 個數字（6/7/8/9）|
@@ -102,3 +102,39 @@
 - `POST /api/compare` — 多系統並排比較
 - `POST /api/interpret` — AI 綜合解讀
 - `GET /api/systems` — 列出可用術數與輸入需求
+
+---
+
+## 支援的術數 (Phase 2)
+
+### ichingshifa（周易筮法）
+
+| 項目 | 說明 |
+|------|------|
+| **System ID** | `ichingshifa` |
+| **System Name** | 周易筮法 |
+| **支援 method** | `random`, `datetime`, `manual` |
+| **必填欄位** | method=datetime → `datetime` + `timezone`；method=manual → `manual_lines`（6 位數字 6/7/8/9）|
+| **回傳 details** | `ben_gua_name`, `zhi_gua_name`, `changed_lines` 等 |
+| **底層函式庫** | [kentang2017/ichingshifa](https://github.com/kentang2017/ichingshifa) |
+
+### liuren（大六壬）
+
+| 項目 | 說明 |
+|------|------|
+| **System ID** | `liuren` |
+| **System Name** | 大六壬 |
+| **支援 method** | 僅 `datetime`（隨機起課不適用於傳統大六壬）|
+| **必填欄位** | `datetime`（後端自動推算節氣、農曆月、日時干支）|
+| **回傳 details** | `san_chuan`（三傳）、`si_ke`（四課）、`tian_di_pan`（天地盤）、`shen_sha`（神煞）、`ge_ju`（格局）、`ri_ma`（日馬）|
+| **底層函式庫** | [kentang2017/kinliuren](https://github.com/kentang2017/kinliuren) |
+
+**範例請求**
+```json
+{
+  "system": "liuren",
+  "method": "datetime",
+  "datetime": "2026-05-15T14:30:00",
+  "timezone": "Asia/Hong_Kong"
+}
+```

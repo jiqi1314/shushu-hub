@@ -8,6 +8,7 @@ pydantic-settings==2.7.0
 
 # Divination libraries
 ichingshifa>=2.0
+kinliuren>=1.0
 sxtwl>=1.1
 ephem>=4.1
 lunar-python>=1.4
