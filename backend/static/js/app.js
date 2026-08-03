@@ -15,6 +15,11 @@ import {
   renderHexagramPreview, renderPanText
 } from "./components/hexagram.js";
 import {
+  createDayanState, dayanStart, dayanDivide, dayanHangOne,
+  dayanCountFour, dayanAdvance, dayanStartNextYao, dayanReset,
+  renderDayanScene, renderDayanProgress,
+} from "./components/dayan.js";
+import {
   renderTaiyiDashboard
 } from "./components/taiyi.js";
 import {
@@ -203,44 +208,67 @@ async function renderIchingshifa(root) {
       <span class="text-secondary text-small" id="iching-mode-desc">依輸入時間起卦</span>
     </div>
 
-    <div class="iching-grid">
-      <div class="iching-main">
-        <div class="hex-preview" id="iching-hex">
-          ${renderHexagramPreview([], "等待起卦")}
-        </div>
-        <div class="code-block" id="iching-pan" style="min-height:60px;">（尚未起卦）</div>
-        <div class="action-bar">
-          <button class="btn btn-primary" id="iching-run-btn">🔮 立即起卦</button>
-          <button class="btn" id="iching-ai-btn">🔍 AI 分析</button>
-        </div>
-        <div id="iching-ai-result"></div>
-      </div>
-      <aside>
-        <div class="card">
-          <h4 class="card-label">起卦方式</h4>
-          <div class="status-row mt-2">
-            <label class="chip active" data-mode="auto"><input type="radio" name="iching-mode" value="auto" checked /> 時間</label>
-            <label class="chip" data-mode="random"><input type="radio" name="iching-mode" value="random" /> 隨機</label>
+    <div class="status-row mt-2">
+      <label class="chip active" data-style="classic"><input type="radio" name="iching-style" value="classic" checked /> 經典排盤</label>
+      <label class="chip" data-style="dayan"><input type="radio" name="iching-style" value="dayan" /> 🌾 沉浸式大衍</label>
+    </div>
+
+    <div id="iching-classic-pane">
+      <div class="iching-grid mt-3">
+        <div class="iching-main">
+          <div class="hex-preview" id="iching-hex">
+            ${renderHexagramPreview([], "等待起卦")}
           </div>
-          <hr/>
-          <div id="iching-manual-block" style="display:none;">
-            <h4 class="card-label">手動輸入爻值（由初爻至上爻）</h4>
-            <div class="grid-2 mt-1" style="gap:8px;">
-              ${["上", "五", "四", "三", "二", "初"].map(p => `
-                <div>
-                  <label class="card-label">${p}爻</label>
-                  <select class="manual-yao" data-pos="${p}" style="width:100%;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:6px;padding:6px;">
-                    <option value="7">少陽 ⚊</option>
-                    <option value="8">少陰 ⚋</option>
-                    <option value="9">老陽 ⚊○</option>
-                    <option value="6">老陰 ⚋×</option>
-                  </select>
-                </div>
-              `).join("")}
+          <div class="code-block" id="iching-pan" style="min-height:60px;">（尚未起卦）</div>
+          <div class="action-bar">
+            <button class="btn btn-primary" id="iching-run-btn">🔮 立即起卦</button>
+            <button class="btn" id="iching-ai-btn">🔍 AI 分析</button>
+          </div>
+          <div id="iching-ai-result"></div>
+        </div>
+        <aside>
+          <div class="card">
+            <h4 class="card-label">起卦方式</h4>
+            <div class="status-row mt-2">
+              <label class="chip active" data-mode="auto"><input type="radio" name="iching-mode" value="auto" checked /> 時間</label>
+              <label class="chip" data-mode="random"><input type="radio" name="iching-mode" value="random" /> 隨機</label>
+            </div>
+            <hr/>
+            <div id="iching-manual-block" style="display:none;">
+              <h4 class="card-label">手動輸入爻值（由初爻至上爻）</h4>
+              <div class="grid-2 mt-1" style="gap:8px;">
+                ${["上", "五", "四", "三", "二", "初"].map(p => `
+                  <div>
+                    <label class="card-label">${p}爻</label>
+                    <select class="manual-yao" data-pos="${p}" style="width:100%;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-subtle);border-radius:6px;padding:6px;">
+                      <option value="7">少陽 ⚊</option>
+                      <option value="8">少陰 ⚋</option>
+                      <option value="9">老陽 ⚊○</option>
+                      <option value="6">老陰 ⚋×</option>
+                    </select>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           </div>
+        </aside>
+      </div>
+    </div>
+
+    <div id="iching-dayan-pane" style="display:none;">
+      <div class="iching-grid mt-3">
+        <div class="iching-main">
+          <div id="iching-dayan-hex"></div>
+          <div id="iching-dayan-scene"></div>
+          <div class="action-bar">
+            <button class="btn btn-primary" id="dayan-action-btn">開始起卦</button>
+            <button class="btn btn-ghost" id="dayan-reset-btn">重新起卦</button>
+          </div>
         </div>
-      </aside>
+        <aside>
+          <div id="iching-dayan-progress"></div>
+        </aside>
+      </div>
     </div>
   `;
   bindIchingshifaHandlers();
@@ -249,6 +277,30 @@ async function renderIchingshifa(root) {
 let ichingState = { lines: [], mode: "auto", manual: "777777", panText: "", panMeta: {} };
 
 function bindIchingshifaHandlers() {
+  // Style toggle (classic vs dayan)
+  document.querySelectorAll('label[data-style]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('label[data-style]').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      const style = el.dataset.style;
+      document.getElementById('iching-classic-pane').style.display = style === 'classic' ? '' : 'none';
+      document.getElementById('iching-dayan-pane').style.display = style === 'dayan' ? '' : 'none';
+      const badge = document.getElementById('iching-mode-badge');
+      const desc = document.getElementById('iching-mode-desc');
+      if (style === 'classic') {
+        badge.className = 'mode-badge auto';
+        badge.textContent = '🤖 時間盤';
+        desc.textContent = '依輸入時間起卦';
+      } else {
+        badge.className = 'mode-badge dayan';
+        badge.textContent = '🌾 大衍筮';
+        desc.textContent = '沉浸式手動起卦（每變逐步推進）';
+      }
+      if (style === 'dayan') initDayanPane();
+    });
+  });
+
   // Mode toggle
   document.querySelectorAll('label[data-mode]').forEach(el => {
     el.addEventListener('click', (e) => {
@@ -293,6 +345,88 @@ function bindIchingshifaHandlers() {
 
   // Auto-run on first load
   runIchingshifa();
+}
+
+// ---------- Dayan (大衍) state machine ----------
+
+let dayanS = createDayanState();
+
+function initDayanPane() {
+  if (!document.getElementById("dayan-action-btn")) return;
+  dayanS = createDayanState();
+  document.getElementById('dayan-action-btn').addEventListener('click', dayanAction);
+  document.getElementById('dayan-reset-btn').addEventListener('click', () => {
+    dayanS = dayanReset();
+    renderDayanUI();
+  });
+  renderDayanUI();
+}
+
+function dayanAction() {
+  if (dayanS.phase === "idle") {
+    dayanStart(dayanS);
+  } else if (dayanS.phase === "active") {
+    if (dayanS.step === "divide") dayanDivide(dayanS);
+    else if (dayanS.step === "hang_one") dayanHangOne(dayanS);
+    else if (dayanS.step === "count_four") dayanCountFour(dayanS);
+    else if (dayanS.step === "change_done") dayanAdvance(dayanS);
+    else if (dayanS.step === "yao_done") {
+      if (dayanS.yao < 6) dayanStartNextYao(dayanS);
+    }
+  }
+  renderDayanUI();
+}
+
+function renderDayanUI() {
+  // Render hexagram preview
+  document.getElementById('iching-dayan-hex').innerHTML =
+    renderHexagramPreview(dayanS.lines, "卦象預覽（沉浸式大衍）");
+
+  // Render scene (or completed message)
+  const scene = document.getElementById('iching-dayan-scene');
+  const action = document.getElementById('dayan-action-btn');
+  const progress = document.getElementById('iching-dayan-progress');
+
+  if (dayanS.phase === "idle") {
+    scene.innerHTML = `
+      <div class="dayan-scene">
+        <div class="dayan-phase">準備起卦 · 大衍之數五十</div>
+        <div class="dayan-piles">
+          <div class="dayan-pile">
+            <div class="dayan-pile-num">49</div>
+            <div class="dayan-pile-tag">蓍草</div>
+          </div>
+        </div>
+        <div class="dayan-total">其用四十有九</div>
+      </div>
+    `;
+    action.textContent = "開始起卦";
+  } else if (dayanS.phase === "active") {
+    scene.innerHTML = renderDayanScene(dayanS);
+    if (dayanS.step === "divide") action.textContent = "分堆";
+    else if (dayanS.step === "hang_one") action.textContent = "掛一";
+    else if (dayanS.step === "count_four") action.textContent = "揲四";
+    else if (dayanS.step === "change_done") {
+      action.textContent = dayanS.change < 3 ? `第 ${dayanS.change + 1} 變` : "成爻";
+    } else if (dayanS.step === "yao_done") {
+      action.textContent = dayanS.yao < 6 ? `第 ${dayanS.yao + 1} 爻` : "完成";
+    }
+  } else if (dayanS.phase === "completed") {
+    scene.innerHTML = `
+      <div class="dayan-scene">
+        <div class="dayan-phase">六爻已成</div>
+        <div class="dayan-piles" style="height:80px;">
+          <div class="dayan-pile" style="flex:0 1 auto;padding:0 30px;">
+            <div class="dayan-pile-num">${dayanS.combine}</div>
+            <div class="dayan-pile-tag">本卦 ${dayanS.combine}</div>
+          </div>
+        </div>
+        <div class="dayan-total">已得六爻，可用 ${dayanS.combine} 進行經典排盤</div>
+      </div>
+    `;
+    action.textContent = "🔮 用此卦排盤";
+  }
+  progress.innerHTML = renderDayanProgress(dayanS);
 }
 
 async function runIchingshifa() {
@@ -434,8 +568,11 @@ function renderLiurenAll(d) {
 
   // 式盤: center = 三傳四課 of 日課
   const center = renderCenterText(d.san_chuan, d.si_ke);
-  // Active mansion: rough — pick first non-empty from 地轉天盤 mapped to 宿 (simplified)
-  const activeMansion = "心";  // visual default; ideally compute from lunar day
+  // Active mansion: derive from day ganzhi + weekday using kentang's
+  // day_chin mapping. We do a simplified version here — kentang's full
+  // table has 28 entries; we approximate via the lunar day 宿 value
+  // embedded in raw_output or default to "心".
+  const activeMansion = detectActiveMansion(d);
   document.getElementById("liuren-shipan").innerHTML = renderShipan(d, activeMansion, center);
 
   // 月/日/時 - for now we only have 日課; show simplified version
@@ -458,6 +595,43 @@ function synthesizeChart(base, scope) {
       ? base.tian_di_pan["天將"] : {},
     "地轉天盤": base["地轉天盤"] || {},
   };
+}
+
+/**
+ * Compute the active 28-mansion for the 式盤 rotation.
+ * kentang's kinliuren uses a table indexed by (地支三合局, 星期幾).
+ * Here we use a simple approximation: the day-branch's 三合 member
+ * (申子辰→虛, 巳酉丑→畢, 寅午戌→心, 亥卯未→房) — these are the
+ * starting positions of the 28-mansion sequence for each group.
+ */
+function detectActiveMansion(details) {
+  const branches = "子丑寅卯辰巳午未申酉戌亥";
+  const groups = {
+    申子辰: ["申", "子", "辰"],
+    巳酉丑: ["巳", "酉", "丑"],
+    寅午戌: ["寅", "午", "戌"],
+    亥卯未: ["亥", "卯", "未"],
+  };
+  const startByGroup = {
+    申子辰: "虛",
+    巳酉丑: "畢",
+    寅午戌: "心",
+    亥卯未: "房",
+  };
+  const dayZhi = details?.daygangzhi?.slice(1) || "";
+  // dayBranch 優先從 siKe 找
+  const branch = (() => {
+    const si = details?.si_ke?.["一課"]?.[0];
+    if (si && si.length >= 1) {
+      const last = si[si.length - 1];
+      if (branches.includes(last)) return last;
+    }
+    return dayZhi;
+  })();
+  for (const [key, members] of Object.entries(groups)) {
+    if (members.includes(branch)) return startByGroup[key];
+  }
+  return "心";
 }
 
 async function aiAnalyzeLiuren() {

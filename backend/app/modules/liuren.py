@@ -66,10 +66,11 @@ class LiuRenModule(BaseModule):
             jieqi, cmonth, day_gz, hour_gz
         ).result(0)
 
-        return self._normalize(raw, ganzhi)
+        return self._normalize(raw, ganzhi, day_gz, hour_gz)
 
     def _normalize(
-        self, raw: dict[str, Any], ganzhi: GanzhiInfo
+        self, raw: dict[str, Any], ganzhi: GanzhiInfo,
+        day_gz: str = "", hour_gz: str = ""
     ) -> DivinationResult:
         """Coerce upstream dict into our standard schema."""
         details: dict[str, Any] = {}
@@ -88,6 +89,17 @@ class LiuRenModule(BaseModule):
 
         if "天地盤" in raw and isinstance(raw["天地盤"], dict):
             details["tian_di_pan"] = raw["天地盤"]
+            # Also expose 地轉天盤 / 地轉天將 for the 式盤 frontend
+            sky = raw["天地盤"].get("天盤", [])
+            earth = raw["天地盤"].get("地盤", [])
+            generals = raw["天地盤"].get("天將", [])
+            branch_order = ["巳", "午", "未", "申", "酉", "戌",
+                            "亥", "子", "丑", "寅", "卯", "辰"]
+            if len(sky) == 12 and len(earth) == 12:
+                details["地轉天盤"] = dict(zip(branch_order, sky))
+                details["地轉天盤_原"] = dict(zip(branch_order, earth))
+            if len(generals) == 12:
+                details["地轉天將"] = dict(zip(branch_order, generals))
 
         if "神煞" in raw and isinstance(raw["神煞"], dict):
             details["shen_sha"] = raw["神煞"]
