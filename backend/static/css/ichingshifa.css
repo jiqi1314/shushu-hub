@@ -1,0 +1,292 @@
+/* 周易 (I-Ching) styles */
+
+.iching-tab {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+}
+
+.iching-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Hexagram preview (大衍 + 經典) */
+.hex-preview {
+  font-family: var(--font-serif);
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(212, 175, 55, 0.06) 0%, transparent 70%),
+    linear-gradient(165deg, #1a1612, #201a14);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 14px;
+  padding: 18px 22px;
+  color: var(--text-primary);
+}
+.hex-title {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 4px;
+  margin-bottom: 14px;
+}
+.hex-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.hex-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px;
+  align-items: center;
+  gap: 8px;
+}
+.hex-pos {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: right;
+  letter-spacing: 1px;
+}
+.hex-label {
+  font-size: 11px;
+  color: var(--gold);
+  text-align: left;
+  letter-spacing: 1px;
+}
+.yao-line {
+  display: flex;
+  align-items: center;
+  height: 14px;
+  position: relative;
+  font-family: var(--font-mono);
+}
+.yao-line .seg {
+  display: inline-block;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 1px;
+  flex: 1;
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.25);
+}
+.yao-line .gap {
+  display: inline-block;
+  width: 16px;
+  flex-shrink: 0;
+}
+.yao-line .mark {
+  position: absolute;
+  right: -20px;
+  font-size: 11px;
+  color: var(--vermilion);
+  font-weight: 600;
+}
+.yl-ghost {
+  height: 14px;
+  background: rgba(212, 175, 55, 0.05);
+  border-radius: 1px;
+}
+.hex-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.hex-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+.hex-dot.done {
+  background: var(--gold);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.5);
+}
+.hex-dot.cur {
+  background: transparent;
+  border-color: var(--gold-bright);
+}
+.hex-names {
+  text-align: center;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+/* Dayan stage (大衍 simulation) */
+.dayan-scene {
+  font-family: var(--font-serif);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.08) 0%, transparent 60%),
+    linear-gradient(165deg, #1a1612 0%, #221c16 50%, #181410 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 14px;
+  padding: 24px;
+  color: var(--text-primary);
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+}
+.dayan-phase {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 18px;
+  letter-spacing: 3px;
+}
+.dayan-piles {
+  display: flex;
+  align-items: stretch;
+  height: 100px;
+  margin-bottom: 16px;
+}
+.dayan-pile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, rgba(90, 70, 40, 0.3) 0%, rgba(40, 34, 24, 0.5) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  margin: 0 4px;
+  position: relative;
+}
+.dayan-pile-num {
+  font-size: 36px;
+  font-weight: 200;
+  color: var(--gold-bright);
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
+}
+.dayan-pile-tag {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  letter-spacing: 2px;
+}
+.dayan-hung {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 4px 16px;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--gold-bright);
+  letter-spacing: 2px;
+  text-align: center;
+}
+.dayan-count-row {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: 12px;
+}
+.dayan-count-item { text-align: center; }
+.dayan-count-num {
+  font-size: 32px;
+  font-weight: 200;
+  color: var(--gold-bright);
+}
+.dayan-count-tag {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+.dayan-detail {
+  text-align: center;
+  font-size: 12px;
+  color: var(--el-wood);
+  margin-top: 14px;
+  letter-spacing: 1px;
+  font-family: var(--font-mono);
+}
+.dayan-total {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 14px;
+  letter-spacing: 2px;
+}
+
+/* Progress panel */
+.dayan-progress {
+  font-family: var(--font-serif);
+  background: linear-gradient(165deg, #1a1612, #201a14);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 14px;
+  padding: 18px 22px;
+  color: var(--text-primary);
+  min-height: 220px;
+}
+.dayan-progress h4 {
+  font-size: 16px;
+  color: var(--gold);
+  letter-spacing: 6px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.dayan-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.dayan-stat {
+  flex: 1;
+  text-align: center;
+  padding: 10px 6px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+}
+.dayan-stat-v {
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--gold-bright);
+}
+.dayan-stat-l {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+.dyan-pipeline {
+  display: flex;
+  gap: 0;
+}
+.dyan-pipe-step {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 6px 2px;
+  letter-spacing: 1px;
+}
+.dyan-pipe-step.active { color: var(--gold-bright); }
+.dyan-pipe-step.done { color: var(--el-wood); }
+.dyan-quote {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  border-left: 2px solid var(--border-gold);
+  padding-left: 10px;
+  font-style: italic;
+}
+
+/* Layout */
+.iching-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .iching-tab { grid-template-columns: 1fr; }
+  .iching-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,79 @@
+/* 太乙神數 styles */
+
+.taiyi-tab {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+}
+.taiyi-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.taiyi-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.taiyi-meta .meta-line {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 14px;
+  font-family: var(--font-serif);
+  padding: 3px 0;
+}
+
+.taiyi-meta .meta-label {
+  color: var(--text-secondary);
+  min-width: 60px;
+  letter-spacing: 2px;
+}
+
+.taiyi-meta .meta-value {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+/* Five-element suan panels */
+.suan-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  text-align: center;
+}
+.suan-card .suan-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+}
+.suan-card .suan-num {
+  font-size: 32px;
+  font-weight: 300;
+  color: var(--gold-bright);
+  font-family: var(--font-serif);
+  margin: 4px 0;
+}
+.suan-card .suan-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+/* 神煞 grid */
+.shensha-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 900px) {
+  .taiyi-tab { grid-template-columns: 1fr; }
+}

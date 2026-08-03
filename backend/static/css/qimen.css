@@ -1,0 +1,56 @@
+/* 奇門遁甲 — 9 宮 grid styles */
+
+.qimen-tab {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+}
+.qimen-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qimen-grid-card {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 175, 55, 0.06) 0%, transparent 70%),
+    linear-gradient(165deg, #0F1726, #1A2536);
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.qimen-grid-card svg {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.qimen-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.qimen-legend .swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* 六戊法 expander */
+.liuwu-svg {
+  max-width: 420px;
+  margin: 12px auto;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .qimen-tab { grid-template-columns: 1fr; }
+}
