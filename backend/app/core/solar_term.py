@@ -1,6 +1,6 @@
 """Solar term (節氣) helpers using sxtwl for full historical coverage."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import NamedTuple
 
 
@@ -17,25 +17,33 @@ _JIEQI_NAMES = [
 ]
 
 
-def _jieqi_index(dt: datetime) -> int:
-    """Return the current jieqi index (0..23) for a given UTC moment.
+def _current_jieqi_index(dt: datetime) -> tuple[int, int]:
+    """Return ``(jieqi_index, days_since)`` for the most recent solar term.
 
-    Convention: a date belongs to the term that began on or before that date.
+    Convention: the \"current\" 節氣 is the most recent one that occurred
+    *on or before* ``dt``. Days since is 0 if the term fell on ``dt`` itself.
+
+    sxtwl's ``Day.getJieQi()`` returns the index only when a term falls on
+    that exact solar day; otherwise it returns 255 (a sentinel). We walk
+    backward up to 30 days to find the most recent term.
     """
     try:
         import sxtwl  # type: ignore
-
-        day = sxtwl.fromSolar(dt.year, dt.month, dt.day)
-        jq = day.getJieQi()
-        if 0 <= jq < 24:
-            return jq
     except ImportError:
-        pass
-    return _fallback_index(dt)
+        return _fallback(dt), 0
+
+    cur_date = dt.date()
+    for offset in range(31):
+        candidate = cur_date - timedelta(days=offset)
+        day_obj = sxtwl.fromSolar(candidate.year, candidate.month, candidate.day)
+        jq = day_obj.getJieQi()
+        if 0 <= jq < 24:
+            return jq, offset
+    return _fallback(dt), 0
 
 
-def _fallback_index(dt: datetime) -> int:
-    """Crude fallback: choose a term based on month only."""
+def _fallback(dt: datetime) -> int:
+    """Crude fallback: pick a jieqi index based on the month only."""
     rough = [
         0, 0, 2, 4, 6, 8,
         10, 12, 14, 16, 18, 20,
@@ -44,28 +52,30 @@ def _fallback_index(dt: datetime) -> int:
 
 
 def current_solar_term(dt: datetime) -> str:
-    """Return the current solar term name for a given datetime."""
-    return _JIEQI_NAMES[_jieqi_index(dt)]
+    """Return the current solar term name (the most recent one on or before dt)."""
+    idx, _ = _current_jieqi_index(dt)
+    return _JIEQI_NAMES[idx]
 
 
 def nearest_solar_term(dt: datetime) -> SolarTermInfo:
-    """Return the nearest solar term to a given datetime.
-
-    Used for display purposes when the term didn't begin exactly on this day.
-    """
-    idx = _jieqi_index(dt)
-    return SolarTermInfo(name=_JIEQI_NAMES[idx], offset_days=0)
+    """Return the nearest solar term (most recent on or before dt)."""
+    idx, offset = _current_jieqi_index(dt)
+    return SolarTermInfo(name=_JIEQI_NAMES[idx], offset_days=-offset)
 
 
 def next_solar_term(dt: datetime) -> tuple[str, int]:
-    """Return (name, days_until) for the next solar term."""
+    """Return ``(name, days_until)`` for the next solar term strictly after dt."""
     try:
         import sxtwl  # type: ignore
-
-        day = sxtwl.fromSolar(dt.year, dt.month, dt.day)
-        jq = day.getJieQi()
-        if 0 <= jq < 24:
-            return _JIEQI_NAMES[jq], 0
     except ImportError:
-        pass
-    return _JIEQI_NAMES[_jieqi_index(dt)], 0
+        idx, _ = _current_jieqi_index(dt)
+        return _JIEQI_NAMES[(idx + 1) % 24], 0
+
+    cur_date = dt.date()
+    for offset in range(1, 32):
+        candidate = cur_date + timedelta(days=offset)
+        day_obj = sxtwl.fromSolar(candidate.year, candidate.month, candidate.day)
+        jq = day_obj.getJieQi()
+        if 0 <= jq < 24:
+            return _JIEQI_NAMES[jq], offset
+    return _JIEQI_NAMES[0], 0
