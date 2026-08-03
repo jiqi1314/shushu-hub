@@ -3,6 +3,13 @@
 Uses the proven ``sxtwl`` library which encodes the Chinese lunisolar calendar
 directly. The Gan-Zhi of a given solar day/hour is purely a function of the
 absolute instant in UTC, so it is timezone-independent once we have UTC.
+
+sxtwl's ``GZ`` objects expose two independent cycle indices:
+  - ``tg`` (天干 index, 0..9)
+  - ``dz`` (地支 index, 0..11)
+The combined ganzhi string is just ``stem[tg] + branch[dz]`` — they are NOT
+components of a single 60-cycle index. (An earlier version of this file
+incorrectly combined them with ``tg*12 + dz``, producing wrong pillars.)
 """
 
 from datetime import UTC, datetime
@@ -17,21 +24,19 @@ except ImportError:  # pragma: no cover - fallback path
 
 
 _HEAVENLY_STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"]
-_EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
+_EARTHLY_BRANCHES = [
+    "子", "丑", "寅", "卯", "辰", "巳",
+    "午", "未", "申", "酉", "戌", "亥",
+]
 
 
-def _stem_branch(idx: int) -> str:
-    """Return ``天干地支`` combined string for a 60-cycle index (0..59)."""
-    return _HEAVENLY_STEMS[idx % 10] + _EARTHLY_BRANCHES[idx % 12]
+def _pillar(tg: int, dz: int) -> str:
+    """Combine a stem index and a branch index into a 干支 string."""
+    return _HEAVENLY_STEMS[tg] + _EARTHLY_BRANCHES[dz]
 
 
 def _ganzhi_for_moment(dt: datetime) -> GanzhiInfo:
-    """Compute the four pillars for a given UTC-aware datetime.
-
-    ``sxtwl.fromSolar(year, month, day)`` returns the lunar day index where
-    day stem/branch are stored. Hour pillar is derived from the same day's
-    hour stem/branch tables.
-    """
+    """Compute the four pillars for a given UTC-aware datetime."""
     if not _SXTWL_AVAILABLE:  # pragma: no cover
         raise RuntimeError("sxtwl is required for ganzhi computation")
 
@@ -41,20 +46,18 @@ def _ganzhi_for_moment(dt: datetime) -> GanzhiInfo:
 
     day_obj = sxtwl.fromSolar(dt_utc.year, dt_utc.month, dt_utc.day)
 
-    year_idx = day_obj.getYearGZ()
-    month_idx = day_obj.getMonthGZ()
-    day_idx = day_obj.getDayGZ()
+    year_gz = day_obj.getYearGZ()
+    month_gz = day_obj.getMonthGZ()
+    day_gz = day_obj.getDayGZ()
 
     hour_branch = (dt_utc.hour + 1) // 2 % 12
-    day_stem = day_idx.tg
-    hour_stem = (day_stem * 2 + hour_branch) % 10
-    hour_idx = (hour_stem, hour_branch)
+    hour_stem = (day_gz.tg * 2 + hour_branch) % 10
 
     return GanzhiInfo(
-        year=_stem_branch(year_idx.tg * 12 + year_idx.dz),
-        month=_stem_branch(month_idx.tg * 12 + month_idx.dz),
-        day=_stem_branch(day_idx.tg * 12 + day_idx.dz),
-        hour=_stem_branch(hour_idx[0] * 12 + hour_idx[1]),
+        year=_pillar(year_gz.tg, year_gz.dz),
+        month=_pillar(month_gz.tg, month_gz.dz),
+        day=_pillar(day_gz.tg, day_gz.dz),
+        hour=_pillar(hour_stem, hour_branch),
     )
 
 
