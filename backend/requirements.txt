@@ -1,0 +1,24 @@
+# Runtime
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Settings & validation
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# Divination libraries
+ichingshifa>=2.0
+sxtwl>=1.1
+ephem>=4.1
+lunar-python>=1.4
+numpy>=1.24
+cn2an>=0.5
+
+# HTTP client (for future AI integration)
+httpx==0.28.1
+
+# Dev / Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+ruff==0.8.4
