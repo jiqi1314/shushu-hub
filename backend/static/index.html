@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shushu-hub · 術數整合</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-2: #232f40;
+      --border: #2d3a4f;
+      --text: #e8eef5;
+      --text-dim: #9ca8b8;
+      --accent: #d4a574;
+      --accent-2: #8b9dc3;
+      --auspicious: #5ec47a;
+      --inauspicious: #e87171;
+      --neutral: #9ca8b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+        "Microsoft JhengHei", sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+    header { text-align: center; padding: 24px 0 32px; }
+    header h1 {
+      font-size: 32px; font-weight: 600; color: var(--accent);
+      letter-spacing: 2px;
+    }
+    header p { color: var(--text-dim); margin-top: 8px; font-size: 14px; }
+
+    /* Form */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .field input, .field select, .field textarea {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .field textarea { resize: vertical; min-height: 60px; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .field-full { grid-column: 1 / -1; }
+
+    .systems-row {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+    }
+    .sys-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .sys-chip.active {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+    .sys-chip input { display: none; }
+
+    .actions { display: flex; gap: 12px; }
+    .btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn:hover { background: #e0b585; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
+
+    /* Results */
+    .results { margin-top: 24px; }
+    .common-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .common-info h2 {
+      font-size: 16px; color: var(--accent); margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    .common-info .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      font-size: 13px;
+    }
+    .common-info .meta div { color: var(--text-dim); }
+    .common-info .meta strong { color: var(--text); margin-left: 4px; }
+
+    .cross-analysis {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .cross-analysis h2 {
+      font-size: 16px; color: var(--accent);
+      margin-bottom: 12px; letter-spacing: 1px;
+    }
+    .verdict-row {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+    }
+    .verdict-badge {
+      padding: 6px 12px; border-radius: 14px;
+      font-size: 12px; font-weight: 600;
+    }
+    .v-auspicious { background: var(--auspicious); color: #0a1f12; }
+    .v-inauspicious { background: var(--inauspicious); color: #2a0a0a; }
+    .v-neutral { background: var(--neutral); color: #1a1f2a; }
+    .v-unknown { background: var(--surface-2); color: var(--text-dim); }
+
+    .overlap-list, .difference-list {
+      list-style: none;
+      padding: 0;
+    }
+    .overlap-list li, .difference-list li {
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid var(--accent-2);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .difference-list li {
+      border-left-color: var(--inauspicious);
+    }
+
+    /* System panels */
+    .panels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .panel:hover { border-color: var(--accent-2); }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-header h3 {
+      font-size: 18px; color: var(--accent);
+      font-weight: 600;
+    }
+    .panel-header .verdict {
+      font-size: 12px;
+      padding: 4px 10px; border-radius: 12px;
+    }
+    .ganzhi {
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+      padding: 8px;
+      background: var(--bg);
+      border-radius: 6px;
+    }
+    .ganzhi span { color: var(--accent); font-weight: 600; margin: 0 4px; }
+    .judgment {
+      font-size: 14px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+    .entities {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    .entities strong { color: var(--accent-2); font-weight: 500; }
+    .entities ul { list-style: none; padding-left: 0; }
+    .entities li { padding: 3px 0; }
+    .entities li:before { content: "• "; color: var(--accent); }
+
+    .raw-toggle {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+    .raw-toggle:hover { color: var(--accent); }
+    .raw-details {
+      display: none;
+      margin-top: 8px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      max-height: 240px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .raw-details.show { display: block; }
+
+    /* States */
+    .loading {
+      text-align: center; padding: 40px;
+      color: var(--text-dim);
+    }
+    .spinner {
+      display: inline-block;
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error {
+      background: rgba(232, 113, 113, 0.1);
+      border: 1px solid var(--inauspicious);
+      border-radius: 8px;
+      padding: 16px;
+      color: var(--inauspicious);
+      margin-top: 16px;
+    }
+    .empty {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-dim);
+    }
+    .empty .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+    /* Mobile */
+    @media (max-width: 640px) {
+      header h1 { font-size: 24px; }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .panels { grid-template-columns: 1fr; }
+    }
+
+    .footer {
+      text-align: center; padding: 32px 16px;
+      color: var(--text-dim); font-size: 12px;
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔮 shushu-hub</h1>
+      <p>輸入一次 · 多術數並排比較</p>
+    </header>
+
+    <form class="form-card" id="form">
+      <div class="form-grid">
+        <div class="field">
+          <label>日期</label>
+          <input type="date" id="date" required />
+        </div>
+        <div class="field">
+          <label>時間</label>
+          <input type="time" id="time" value="14:30" required />
+        </div>
+        <div class="field">
+          <label>時區</label>
+          <select id="timezone">
+            <option value="Asia/Hong_Kong" selected>Asia/Hong_Kong (UTC+8)</option>
+            <option value="Asia/Taipei">Asia/Taipei (UTC+8)</option>
+            <option value="Asia/Shanghai">Asia/Shanghai (UTC+8)</option>
+            <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+            <option value="America/New_York">America/New_York</option>
+            <option value="Europe/London">Europe/London</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>問事</label>
+          <input type="text" id="question" placeholder="例：事業轉職時機" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>選用術數（點擊切換）</label>
+        <div class="systems-row" id="systemsRow"></div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn" id="submitBtn">🔮 開始排盤</button>
+        <button type="button" class="btn btn-ghost" id="resetBtn">重置</button>
+      </div>
+    </form>
+
+    <div id="output"></div>
+
+    <footer class="footer">
+      Powered by kentang2017's open-source libraries · MIT License
+    </footer>
+  </div>
+
+  <script>
+    const SYSTEMS = [
+      { id: 'ichingshifa', name: '周易筮法', desc: '六爻納甲' },
+      { id: 'liuren',      name: '大六壬',   desc: '三式之首' },
+      { id: 'qimen',       name: '奇門遁甲', desc: '時家奇門' },
+      { id: 'taiyi',       name: '太乙神數', desc: '三式之末' },
+    ];
+
+    const VERDICT_LABEL = {
+      auspicious:   '吉',
+      inauspicious: '凶',
+      neutral:      '平',
+      unknown:      '—',
+    };
+
+    function defaultDateTime() {
+      const now = new Date();
+      now.setMinutes(0, 0, 0);
+      const pad = n => String(n).padStart(2, '0');
+      return {
+        date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+        time: `${pad(now.getHours())}:${pad(now.getMinutes())}`,
+      };
+    }
+
+    function init() {
+      const { date, time } = defaultDateTime();
+      document.getElementById('date').value = date;
+      document.getElementById('time').value = time;
+
+      const row = document.getElementById('systemsRow');
+      SYSTEMS.forEach(sys => {
+        const chip = document.createElement('label');
+        chip.className = 'sys-chip active';
+        chip.dataset.systemId = sys.id;
+        chip.innerHTML = `
+          <input type="checkbox" checked value="${sys.id}" />
+          <span><strong>${sys.name}</strong> <small>· ${sys.desc}</small></span>
+        `;
+        chip.addEventListener('click', e => {
+          e.preventDefault();
+          chip.classList.toggle('active');
+          const cb = chip.querySelector('input');
+          cb.checked = !cb.checked;
+        });
+        row.appendChild(chip);
+      });
+
+      document.getElementById('form').addEventListener('submit', onSubmit);
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        document.getElementById('output').innerHTML = '';
+      });
+    }
+
+    function selectedSystems() {
+      return Array.from(document.querySelectorAll('.sys-chip.active'))
+        .map(c => c.dataset.systemId);
+    }
+
+    function verdictClass(v) {
+      const map = {
+        auspicious: 'v-auspicious',
+        inauspicious: 'v-inauspicious',
+        neutral: 'v-neutral',
+      };
+      return map[v] || 'v-unknown';
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    async function onSubmit(ev) {
+      ev.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      const output = document.getElementById('output');
+
+      const date = document.getElementById('date').value;
+      const time = document.getElementById('time').value;
+      const timezone = document.getElementById('timezone').value;
+      const question = document.getElementById('question').value;
+      const systems = selectedSystems();
+
+      if (!date || !time) return alert('請填寫日期和時間');
+      if (systems.length === 0) return alert('請至少選一個術數');
+
+      const datetime = `${date}T${time}:00`;
+      const payload = {
+        datetime,
+        timezone,
+        systems,
+        question: question || undefined,
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '排盤中...';
+      output.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <div>正在呼叫 ${systems.length} 個術數...</div>
+        </div>`;
+
+      try {
+        const r = await fetch('/api/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail?.message || `HTTP ${r.status}`);
+        renderResults(data);
+      } catch (err) {
+        output.innerHTML = `<div class="error">❌ ${escapeHtml(err.message)}</div>`;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🔮 開始排盤';
+      }
+    }
+
+    function renderResults(data) {
+      const output = document.getElementById('output');
+      const { results, cross_analysis, failures, question } = data;
+
+      const first = results[0];
+      const ganzhi = first?.ganzhi;
+
+      let html = '<div class="results">';
+
+      html += `
+        <div class="common-info">
+          <h2>📋 共用資訊</h2>
+          <div class="meta">
+            <div>時間：<strong>${escapeHtml(first?.computed_at?.slice(0, 16) || '—')}</strong></div>
+            <div>問事：<strong>${escapeHtml(question || '未填')}</strong></div>
+            ${ganzhi ? `
+              <div>干支：
+                <strong>${ganzhi.year}</strong> 年
+                <strong>${ganzhi.month}</strong> 月
+                <strong>${ganzhi.day}</strong> 日
+                <strong>${ganzhi.hour}</strong> 時
+              </div>` : ''}
+            <div>成功系統：<strong>${results.length}</strong> / 失敗：<strong>${failures.length}</strong></div>
+          </div>
+        </div>`;
+
+      const ca = cross_analysis;
+      if (ca && Object.keys(ca).length > 0) {
+        const counts = ca.verdict_counts || {};
+        const verdictBadges = ['auspicious', 'inauspicious', 'neutral', 'unknown']
+          .filter(v => counts[v])
+          .map(v => `<span class="verdict-badge ${verdictClass(v)}">${VERDICT_LABEL[v]} × ${counts[v]}</span>`)
+          .join('');
+
+        html += `
+          <div class="cross-analysis">
+            <h2>🔍 跨系統分析（consensus: ${escapeHtml(ca.consensus)})</h2>
+            <div class="verdict-row">${verdictBadges}</div>
+            ${ca.overlap?.length ? `
+              <strong style="color:var(--accent-2);font-size:13px;">共同點</strong>
+              <ul class="overlap-list">${ca.overlap.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>` : ''}
+            ${ca.differences?.length ? `
+              <strong style="color:var(--inauspicious);font-size:13px;margin-top:12px;display:block;">分歧</strong>
+              <ul class="difference-list">${ca.differences.map(d => `<li>${escapeHtml(d)}</li>`).join('')}</ul>` : ''}
+          </div>`;
+      }
+
+      html += '<div class="panels">';
+      results.forEach((r, i) => {
+        const entities = ca?.entities_by_system?.[r.system_name] || [];
+        const gz = r.ganzhi || {};
+        html += `
+          <div class="panel">
+            <div class="panel-header">
+              <h3>${escapeHtml(r.system_name)}</h3>
+              <span class="verdict ${verdictClass(r.system_id)}">${escapeHtml(r.system_id)}</span>
+            </div>
+            ${gz.year ? `
+              <div class="ganzhi">
+                <span>${gz.year}</span>年
+                <span>${gz.month}</span>月
+                <span>${gz.day}</span>日
+                <span>${gz.hour}</span>時
+              </div>` : ''}
+            <div class="judgment">${escapeHtml(r.main_judgment || '（無判斷）')}</div>
+            ${entities.length ? `
+              <div class="entities">
+                <strong>關鍵詞</strong>
+                <ul>${entities.slice(0, 6).map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>
+              </div>` : ''}
+            <button class="raw-toggle" data-i="${i}">▸ 顯示原始資料</button>
+            <div class="raw-details" id="raw-${i}">${escapeHtml(r.raw_output)}</div>
+          </div>`;
+      });
+      html += '</div>';
+
+      if (failures.length) {
+        html += '<div class="error" style="margin-top:16px"><strong>部分系統失敗：</strong><ul style="margin-top:8px;padding-left:20px;">';
+        failures.forEach(f => {
+          html += `<li>${escapeHtml(f.system)}: ${escapeHtml(f.message)}</li>`;
+        });
+        html += '</ul></div>';
+      }
+
+      html += '</div>';
+      output.innerHTML = html;
+
+      output.querySelectorAll('.raw-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = btn.dataset.i;
+          const el = document.getElementById(`raw-${i}`);
+          el.classList.toggle('show');
+          btn.textContent = el.classList.contains('show') ? '▾ 隱藏原始資料' : '▸ 顯示原始資料';
+        });
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>
