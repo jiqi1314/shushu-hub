@@ -31,6 +31,44 @@ class IchingShifaModule(BaseModule):
                 "ichingshifa package is required: pip install ichingshifa"
             ) from exc
 
+    def _datetime_lines(
+        self, year: int, month: int, day: int, hour: int, minute: int
+    ) -> str | None:
+        """Replicate upstream's datetime_bookgua line-value algorithm.
+
+        Returns the 6-char combine_gua after 變爻 substitution, e.g. "977777"
+        for a hexagram with the first line changing. None if upstream's
+        internal tables are missing (shouldn't happen in practice).
+        """
+        try:
+            gangzhi = self._iching.gangzhi(year, month, day, hour, minute)
+            ld = self._iching.lunar_date_d(year, month, day)
+            zhi_code = dict(zip(self._iching.dizhi, range(1, 13)))
+            yz_code = zhi_code.get(gangzhi[0][1])
+            hz_code = zhi_code.get(gangzhi[3][1])
+            cm = ld.get("月")
+            cd = ld.get("日")
+            eightgua = {
+                1: "777", 2: "778", 3: "787", 4: "788",
+                5: "877", 6: "878", 7: "887", 8: "888",
+            }
+            upper_remain = (yz_code + cm + cd + hz_code) % 8
+            if upper_remain == 0:
+                upper_remain = 8
+            lower_remain = (yz_code + cm + cd) % 8
+            if lower_remain == 0:
+                lower_remain = 8
+            combine = list(eightgua[lower_remain] + eightgua[upper_remain])
+            bian_yao = (yz_code + cm + cd + hz_code) % 6
+            if bian_yao == 0:
+                bian_yao = 6
+            combine[bian_yao - 1] = (
+                combine[bian_yao - 1].replace("7", "9").replace("8", "6")
+            )
+            return "".join(combine)
+        except Exception:
+            return None
+
     def validate(self, request: DivinationRequest) -> None:
         if request.method == "manual":
             if not request.manual_lines:
@@ -48,9 +86,22 @@ class IchingShifaModule(BaseModule):
 
         if request.method == "random":
             raw = self._iching.qigua_now()
+            # bookgua() returns just the 6-char line string
+            bookgua_raw = self._iching.bookgua()
+            if isinstance(bookgua_raw, str) and len(bookgua_raw) == 6:
+                lines = bookgua_raw
         elif request.method == "datetime":
             assert request.event_at is not None
             gz = compute_ganzhi(request.event_at)
+            # Compute the line values using upstream's algorithm so the
+            # frontend can render the hexagram preview.
+            lines = self._datetime_lines(
+                request.event_at.year,
+                request.event_at.month,
+                request.event_at.day,
+                request.event_at.hour,
+                request.event_at.minute,
+            )
             raw = self._iching.datetime_bookgua(
                 request.event_at.year,
                 request.event_at.month,
@@ -64,10 +115,15 @@ class IchingShifaModule(BaseModule):
                 gz = compute_ganzhi(request.event_at)
             raw = self._iching.mget_bookgua_details(request.manual_lines)
 
-        return self._normalize(raw, gz)
+        # For datetime/random, also compute the line values to feed
+        # the frontend hexagram preview. (already computed above)
+        if request.manual_lines is not None:
+            lines = request.manual_lines
+
+        return self._normalize(raw, gz, lines)
 
     def _normalize(
-        self, raw: Any, ganzhi: GanzhiInfo | None
+        self, raw: Any, ganzhi: GanzhiInfo | None, lines: str | None = None
     ) -> DivinationResult:
         """Coerce the upstream library's output into our standard schema."""
         details: dict[str, Any] = {}
@@ -105,6 +161,10 @@ class IchingShifaModule(BaseModule):
             details["gua_symbol"] = raw[1]
             yao_info = raw[2] or ""
             details["changed_line_text"] = yao_info
+            # If we got a separate 6-char line string, store it for the
+            # frontend hexagram preview.
+            if lines and len(lines) == 6 and all(c in "6789" for c in lines):
+                details["lines"] = lines
             main_judgment = " → ".join(str(x) for x in raw if x)
         elif isinstance(raw, str):
             raw_output = raw

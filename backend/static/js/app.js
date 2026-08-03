@@ -323,6 +323,10 @@ async function runIchingshifa() {
 
 function parseLinesFromResult(result) {
   const d = result.details || {};
+  // Backend may pre-compute the 6-char line string for datetime/random.
+  if (d.lines && d.lines.length === 6 && /^[6789]{6}$/.test(d.lines)) {
+    return d.lines.split("");
+  }
   const raw = result.raw_output || "";
   const m = String(raw).match(/[6789]{6}/);
   if (m) return m[0].split("");
