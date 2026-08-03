@@ -1,34 +1,32 @@
 # Roadmap · 開發時程
 
-## Phase 1 — Backend Skeleton ✅ (in progress)
-
-**目標**：建立 repo + FastAPI 服務 + 第一個術數（ichingshifa）端點可運作
+## Phase 1 — Backend Skeleton ✅
 
 | 任務 | 狀態 |
 |------|------|
 | Repo + remote | ✅ |
 | README / LICENSE / .gitignore | ✅ |
-| Backend 骨架 (FastAPI + CORS) | 🔜 |
-| Core: ganzhi / lunar / true_solar / solar_term | 🔜 |
-| Schemas: DivinationRequest / Result / ErrorResponse | 🔜 |
-| ichingshifa module adapter | 🔜 |
-| `POST /api/divination` 端點 | 🔜 |
-| `GET /health` 端點 | 🔜 |
-| pytest 基本測試 | 🔜 |
-| Dockerfile | 🔜 |
-| 推送第一個 commit | 🔜 |
+| Backend 骨架 (FastAPI + CORS) | ✅ |
+| Core: ganzhi / lunar / true_solar / solar_term | ✅ |
+| Schemas: DivinationRequest / Result / ErrorResponse | ✅ |
+| ichingshifa module adapter | ✅ |
+| `POST /api/divination` 端點 | ✅ |
+| `GET /health` 端點 | ✅ |
+| pytest 基本測試 | ✅ (21 passing) |
+| Dockerfile | ✅ |
+| 推送第一個 commit | ✅ |
 
----
+## Phase 2 — 三式 + 並排比較（in progress）
 
-## Phase 2 — 三式其餘 + 並排比較（2 週）
-
-| 任務 | 說明 |
+| 任務 | 狀態 |
 |------|------|
-| LiuRen adapter | 大六壬 |
-| QiMen adapter | 奇門遁甲（時家 + 金函玉鏡）|
-| TaiYi adapter | 太乙神數 |
-| `POST /api/compare` | 跨系統欄位比對端點 |
-| `field_mapper.py` | 抽出共通欄位 |
+| LiuRen adapter (大六壬) | ✅ |
+| QiMen adapter (奇門遁甲) | ✅ |
+| TaiYi adapter (太乙神數) | ✅ |
+| `POST /api/compare` | 🔜 |
+| `field_mapper.py` | 🔜 |
+
+測試累計 43 passing。
 
 ---
 

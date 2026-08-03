@@ -25,9 +25,11 @@
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `system` | `string` | ✅ | `"ichingshifa"` / `"liuren"` / `"qimen"` (Phase 2) |
+| `system` | `string` | ✅ | `"ichingshifa"` / `"liuren"` / `"qimen"` / `"taiyi"` (Phase 2) |
 | `method` | `string` | ✅ | `"random"` / `"datetime"` / `"manual"` (system-dependent) |
 | `details.variant` | `string` | optional | For `qimen`: `"chabu"` (default), `"zhirun"`, `"ke_chabu"`, `"ke_zhirun"`, `"jinhanyujing"` |
+| `details.scope` | `string` | optional | For `taiyi`: `"fenji"` (分計, default), `"nianji"`, `"yueji"`, `"riji"`, `"shiji"` |
+| `details.formula` | `string` | optional | For `taiyi`: `"tongzong"` (太乙統宗, default), `"jinjing"`, `"taojinge"`, `"ju"` |
 | `datetime` | `string` (ISO 8601) | conditional | `method=datetime` 或 `method=manual` 時填寫 |
 | `timezone` | `string` | conditional | IANA 時區名稱，如 `"Asia/Hong_Kong"` |
 | `manual_lines` | `string` (6 chars) | conditional | `method=manual` 時輸入 6 個數字（6/7/8/9）|
@@ -160,5 +162,29 @@
   "method": "datetime",
   "datetime": "2026-08-04T14:30:00",
   "details": { "variant": "jinhanyujing" }
+}
+```
+
+### taiyi（太乙神數）
+
+| 項目 | 說明 |
+|------|------|
+| **System ID** | `taiyi` |
+| **System Name** | 太乙神數 |
+| **支援 method** | 僅 `datetime` |
+| **必填欄位** | `datetime` |
+| **選填 scope** | `details.scope`: `fenji` (分計, 預設), `nianji` (年計), `yueji` (月計), `riji` (日計), `shiji` (時計) |
+| **選填 formula** | `details.formula`: `tongzong` (太乙統宗, 預設), `jinjing` (太乙金鏡), `taojinge` (太乙淘金歌), `ju` (太乙局) |
+| **回傳 details** | `太乙計`, `太乙公式類別`, `紀元`, `太歲`, `局式`, `太乙落宮`, `太乙`, `天乙`, `地乙`, `主算`, `客算`, `定算` 等 |
+| **底層函式庫** | [kentang2017/kintaiyi](https://github.com/kentang2017/kintaiyi) |
+| **特殊處理** | 同樣 bypass `__init__.py`；numpy 標量遞迴轉原生型別 |
+
+**範例請求（年計 · 太乙金鏡）**
+```json
+{
+  "system": "taiyi",
+  "method": "datetime",
+  "datetime": "2026-08-04T14:30:00",
+  "details": { "scope": "nianji", "formula": "jinjing" }
 }
 ```
